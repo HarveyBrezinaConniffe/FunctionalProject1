@@ -1,7 +1,7 @@
 module Shapes(
   Shape, Point, Vector, Transform, Drawing,
   point, getX, getY,
-  empty, circle, square, rectangle,
+  empty, circle, square, rectangle, ellipse,
   identity, translate, rotate, scale, (<+>),
   inside)  where
 
@@ -44,6 +44,7 @@ data Shape = Empty
            | Circle
            | Square
            | Rectangle Double Double
+           | Ellipse Double Double
              deriving Show
 
 empty, circle, square :: Shape
@@ -52,6 +53,7 @@ empty = Empty
 circle = Circle
 square = Square
 rectangle = Rectangle
+ellipse = Ellipse
 
 -- Transformations
 
@@ -91,7 +93,8 @@ insides :: Point -> Shape -> Bool
 p `insides` Empty = False
 p `insides` Circle = distance p <= 1
 p `insides` Square = maxnorm  p <= 1
-(Vector x y) `insides` (Rectangle width height) = (x <= width) && (y <= height)
+(Vector x y) `insides` (Rectangle width height) = (x >= 0 && x <= width) && (y >= 0 && y <= height)
+(Vector x y) `insides` (Ellipse width height) = (((x**2)/((width/2)**2))+((y**2)/((height/2)**2))) <= 1
 
 distance :: Point -> Double
 distance (Vector x y ) = sqrt ( x**2 + y**2 )
