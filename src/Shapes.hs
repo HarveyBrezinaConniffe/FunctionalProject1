@@ -1,10 +1,9 @@
 module Shapes(
   Shape, Point, Vector, Transform, Drawing,
   point, getX, getY,
-  empty, circle, square, rectangle, ellipse,
+  empty, circle, square, rectangle, ellipse, polygon, polygonEdge,
   identity, translate, rotate, scale, (<+>),
   inside)  where
-
 
 -- Utilities
 
@@ -39,12 +38,20 @@ type Point  = Vector
 point :: Double -> Double -> Point
 point = vector
 
+data HorizontalRay = HorizontalRay Double Double
+                     deriving Show
+horizontalRay = HorizontalRay
+
+data PolygonEdge = PolygonEdge Point Point
+                   deriving Show
+polygonEdge = PolygonEdge
 
 data Shape = Empty
            | Circle
            | Square
            | Rectangle Double Double
            | Ellipse Double Double
+           | Polygon [PolygonEdge]
              deriving Show
 
 empty, circle, square :: Shape
@@ -54,6 +61,7 @@ circle = Circle
 square = Square
 rectangle = Rectangle
 ellipse = Ellipse
+polygon = Polygon
 
 -- Transformations
 
@@ -95,11 +103,33 @@ p `insides` Circle = distance p <= 1
 p `insides` Square = maxnorm  p <= 1
 (Vector x y) `insides` (Rectangle width height) = (x >= 0 && x <= width) && (y >= 0 && y <= height)
 (Vector x y) `insides` (Ellipse width height) = (((x**2)/((width/2)**2))+((y**2)/((height/2)**2))) <= 1
+p `insides` (Polygon edges) = pointInPolygon p edges
+
+pointInPolygon :: Point -> [PolygonEdge] -> Bool
+pointInPolygon (Vector x y) edges = odd (numIntersects (Vector x y) edges)
+
+numIntersects :: Point -> [PolygonEdge] -> Int
+numIntersects (Vector x y) edges = sum (map fromEnum intersectList) where
+  intersectList = map (rayIntersectsLineSegment (HorizontalRay x y)) edges 
+
+rayIntersectsLineSegment :: HorizontalRay -> PolygonEdge -> Bool
+rayIntersectsLineSegment (HorizontalRay start_x start_y) (PolygonEdge (Vector x1 y1) (Vector x2 y2)) =
+  lineCrossesXAxis point1 point2 && 0 <= xIntersect point1 point2 where
+    point1 = (point (x1-start_x) (y1-start_y))
+    point2 = (point (x2-start_x) (y2-start_y))
+
+lineCrossesXAxis :: Point -> Point -> Bool
+lineCrossesXAxis (Vector _ y1) (Vector _ y2) = y1*y2 <= 0
+
+xIntersect :: Point -> Point -> Double
+xIntersect (Vector x1 y1) (Vector x2 y2) = (-c)/m where
+  m = (y2-y1)/((x2-x1)+0.0001)
+  c = y2-(m*x2)
 
 distance :: Point -> Double
-distance (Vector x y ) = sqrt ( x**2 + y**2 )
+distance (Vector x y) = sqrt ( x**2 + y**2 )
 
 maxnorm :: Point -> Double
-maxnorm (Vector x y ) = max (abs x) (abs y)
+maxnorm (Vector x y) = max (abs x) (abs y)
 
 testShape = (scale (point 10 10), circle)
