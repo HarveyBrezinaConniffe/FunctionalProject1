@@ -2,9 +2,11 @@ module Shapes(
   Shape, Point, Vector, Transform, Drawing,
   point, getX, getY,
   empty, circle, square, rectangle, ellipse, polygon, polygonEdge,
-  identity, translate, rotate, scale, (<+>),
+  ident, translate, rotate, scale, (<+>),
   inside)  where
 
+import Data.Matrix
+ 
 -- Utilities
 
 data Vector = Vector Double Double
@@ -14,19 +16,19 @@ vector = Vector
 cross :: Vector -> Vector -> Double
 cross (Vector a b) (Vector a' b') = a * a' + b * b'
 
-mult :: Matrix -> Vector -> Vector
-mult (Matrix r0 r1) v = Vector (cross r0 v) (cross r1 v)
+-- mult :: Matrix -> Vector -> Vector
+-- mult (Matrix r0 r1) v = Vector (cross r0 v) (cross r1 v)
 
-invert :: Matrix -> Matrix
-invert (Matrix (Vector a b) (Vector c d)) = matrix (d / k) (-b / k) (-c / k) (a / k)
-  where k = a * d - b * c
+-- invert :: Matrix -> Matrix
+-- invert (Matrix (Vector a b) (Vector c d)) = matrix (d / k) (-b / k) (-c / k) (a / k)
+--   where k = a * d - b * c
 
 -- 2x2 square matrices are all we need.
-data Matrix = Matrix Vector Vector
-              deriving Show
+-- data Matrix = Matrix Vector Vector
+--              deriving Show
 
-matrix :: Double -> Double -> Double -> Double -> Matrix
-matrix a b c d = Matrix (Vector a b) (Vector c d)
+-- matrix :: Double -> Double -> Double -> Double -> Matrix
+-- matrix a b c d = Matrix (Vector a b) (Vector c d)
 
 getX (Vector x y) = x
 getY (Vector x y) = y
@@ -37,6 +39,12 @@ type Point  = Vector
 
 point :: Double -> Double -> Point
 point = vector
+
+pointToHomogenousVec :: Point -> (Matrix Double)
+pointToHomogenousVec (Vector x y) = fromList 3 1 [x, y, 1]
+
+homogenousVecToPoint :: (Matrix Double) -> Point
+homogenousVecToPoint mat = Vector (getElem 1 1 mat) (getElem 2 1 mat)
 
 data HorizontalRay = HorizontalRay Double Double
                      deriving Show
@@ -65,25 +73,43 @@ polygon = Polygon
 
 -- Transformations
 
-data Transform = Identity
-           | Translate Vector
-           | Scale Vector
-           | Compose Transform Transform
-           | Rotate Matrix
-             deriving Show
+data Transform = Transform (Matrix Double)
+  deriving Show
 
-identity = Identity
-translate = Translate
-scale = Scale
-rotate angle = Rotate $ matrix (cos angle) (-sin angle) (sin angle) (cos angle)
-t0 <+> t1 = Compose t0 t1
+ident         = Transform (fromList 3 3 [1, 0, 0, 0, 1, 0, 0, 0, 1])
+translate x y = Transform (fromList 3 3 [1, 0, x, 0, 1, y, 0, 0, 1])
+scale     x y = Transform (fromList 3 3 [x, 0, 0, 0, y, 0, 0, 0, 1])
+shear     x y = Transform (fromList 3 3 [1, x, 0, y, 1, 0, 0, 0, 1])
+rotate angle  = Transform (fromList 3 3 [(cos angle), (-sin angle), 0, (sin angle), (cos angle), 0, 0, 0, 1])
+
+(<+>) :: Transform -> Transform -> Transform
+(Transform m1) <+> (Transform m2) = Transform (multStd m1 m2)
 
 transform :: Transform -> Point -> Point
-transform Identity                   x = x
-transform (Translate (Vector tx ty)) (Vector px py)  = Vector (px - tx) (py - ty)
-transform (Scale (Vector tx ty))     (Vector px py)  = Vector (px / tx)  (py / ty)
-transform (Rotate m)                 p = invert m `mult` p
-transform (Compose t1 t2)            p = transform t2 $ transform t1 p
+transform (Transform mat) p = homogenousVecToPoint (multStd mat (pointToHomogenousVec p))
+
+-- data Transform = Identity
+--           | Translate Vector
+--           | Scale Vector
+--           | Shear Vector
+--           | Compose Transform Transform
+--           | Rotate Matrix
+--              deriving Show
+
+-- identity = Identity
+-- translate = Translate
+-- scale = Scale
+-- shear = Shear
+-- rotate angle = Rotate $ matrix (cos angle) (-sin angle) (sin angle) (cos angle)
+-- t0 <+> t1 = Compose t0 t1
+
+-- transform :: Transform -> Point -> Point
+-- transform Identity                   x = x
+-- transform (Translate (Vector tx ty)) (Vector px py)  = Vector (px - tx) (py - ty)
+-- transform (Scale (Vector tx ty))     (Vector px py)  = Vector (px / tx)  (py / ty)
+-- transform (Rotate m)                 p = invert m `mult` p
+-- transform (Compose t1 t2)            p = transform t2 $ transform t1 p
+
 
 -- Drawings
 
@@ -131,5 +157,3 @@ distance (Vector x y) = sqrt ( x**2 + y**2 )
 
 maxnorm :: Point -> Double
 maxnorm (Vector x y) = max (abs x) (abs y)
-
-testShape = (scale (point 10 10), circle)
