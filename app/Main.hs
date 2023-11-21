@@ -42,3 +42,4 @@ main = scotty 8080 $ do
         H.body $ do
           H.h1 "Welcome"
           H.p "Hi"
+          H.img H.! A.src "/image"
