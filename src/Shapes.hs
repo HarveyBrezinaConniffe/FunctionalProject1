@@ -16,20 +16,6 @@ vector = Vector
 cross :: Vector -> Vector -> Double
 cross (Vector a b) (Vector a' b') = a * a' + b * b'
 
--- mult :: Matrix -> Vector -> Vector
--- mult (Matrix r0 r1) v = Vector (cross r0 v) (cross r1 v)
-
--- invert :: Matrix -> Matrix
--- invert (Matrix (Vector a b) (Vector c d)) = matrix (d / k) (-b / k) (-c / k) (a / k)
---   where k = a * d - b * c
-
--- 2x2 square matrices are all we need.
--- data Matrix = Matrix Vector Vector
---              deriving Show
-
--- matrix :: Double -> Double -> Double -> Double -> Matrix
--- matrix a b c d = Matrix (Vector a b) (Vector c d)
-
 getX (Vector x y) = x
 getY (Vector x y) = y
 
@@ -79,10 +65,8 @@ data Transform = Transform (Matrix Double)
 ident         = Transform (fromList 3 3 [1, 0, 0, 0, 1, 0, 0, 0, 1])
 translate x y = Transform (fromList 3 3 [1, 0, -x, 0, 1, -y, 0, 0, 1])
 scale     x y = Transform (fromList 3 3 [1/x, 0, 0, 0, 1/y, 0, 0, 0, 1])
--- shear     x y = Transform (fromList 3 3 [1, x, 0, y, 1, 0, 0, 0, 1])
 shear     x y = Transform (fromList 3 3 [1/k, (-x)/k, 0, (-y)/k, 1/k, 0, 0, 0, 1]) where
   k = 1 * 1 - x * y 
--- rotate angle  = Transform (fromList 3 3 [(cos angle), (-sin angle), 0, (sin angle), (cos angle), 0, 0, 0, 1])
 rotate angle  = Transform (fromList 3 3 [(cos angle)/k, (-(-sin angle))/k, 0, (-(sin angle))/k, (cos angle)/k, 0, 0, 0, 1]) where
   k = (cos angle) * (cos angle) - (-sin angle) * (sin angle)
 
@@ -91,29 +75,6 @@ rotate angle  = Transform (fromList 3 3 [(cos angle)/k, (-(-sin angle))/k, 0, (-
 
 transform :: Transform -> Point -> Point
 transform (Transform mat) p = homogenousVecToPoint (multStd mat (pointToHomogenousVec p))
-
--- data Transform = Identity
---           | Translate Vector
---           | Scale Vector
---           | Shear Vector
---           | Compose Transform Transform
---           | Rotate Matrix
---              deriving Show
-
--- identity = Identity
--- translate = Translate
--- scale = Scale
--- shear = Shear
--- rotate angle = Rotate $ matrix (cos angle) (-sin angle) (sin angle) (cos angle)
--- t0 <+> t1 = Compose t0 t1
-
--- transform :: Transform -> Point -> Point
--- transform Identity                   x = x
--- transform (Translate (Vector tx ty)) (Vector px py)  = Vector (px - tx) (py - ty)
--- transform (Scale (Vector tx ty))     (Vector px py)  = Vector (px / tx)  (py / ty)
--- transform (Rotate m)                 p = invert m `mult` p
--- transform (Compose t1 t2)            p = transform t2 $ transform t1 p
-
 
 -- Drawings
 
