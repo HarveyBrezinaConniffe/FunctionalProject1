@@ -6,6 +6,9 @@ import Lib
 import Shapes
 import Codec.Picture
 import Render (render,defaultWindow)
+import Text.Blaze.Html.Renderer.Text (renderHtml)
+import qualified Text.Blaze.Html5 as H
+import qualified Text.Blaze.Html5.Attributes as A
 import Web.Scotty
 
 --exampleDrawing =  [ ((scale 0.5 0.25)<+>(translate 0.25 0.5)<+>(shear 0.25 0.1)<+>(rotate 0.5), circle) ]
@@ -31,5 +34,11 @@ circleMask = [((scale 1 0.25), circle)]
 --main = render "output.png" defaultWindow exampleDrawing (MaskDrawing circleMask)
 
 main = scotty 8080 $ do
-  get "/" $ do
-    html "Hello World!"
+  get "/image" $ do
+    raw (render defaultWindow exampleDrawing (MaskDrawing circleMask))
+  get "/" $
+    html $ renderHtml $
+      H.html $
+        H.body $ do
+          H.h1 "Welcome"
+          H.p "Hi"
