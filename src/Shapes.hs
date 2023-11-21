@@ -2,7 +2,7 @@ module Shapes(
   Shape, Point, Vector, Transform, Drawing,
   point, getX, getY,
   empty, circle, square, rectangle, ellipse, polygon, polygonEdge,
-  ident, translate, rotate, scale, (<+>),
+  ident, translate, rotate, scale, shear, (<+>),
   inside)  where
 
 import Data.Matrix
@@ -77,10 +77,14 @@ data Transform = Transform (Matrix Double)
   deriving Show
 
 ident         = Transform (fromList 3 3 [1, 0, 0, 0, 1, 0, 0, 0, 1])
-translate x y = Transform (fromList 3 3 [1, 0, x, 0, 1, y, 0, 0, 1])
-scale     x y = Transform (fromList 3 3 [x, 0, 0, 0, y, 0, 0, 0, 1])
-shear     x y = Transform (fromList 3 3 [1, x, 0, y, 1, 0, 0, 0, 1])
-rotate angle  = Transform (fromList 3 3 [(cos angle), (-sin angle), 0, (sin angle), (cos angle), 0, 0, 0, 1])
+translate x y = Transform (fromList 3 3 [1, 0, -x, 0, 1, -y, 0, 0, 1])
+scale     x y = Transform (fromList 3 3 [1/x, 0, 0, 0, 1/y, 0, 0, 0, 1])
+-- shear     x y = Transform (fromList 3 3 [1, x, 0, y, 1, 0, 0, 0, 1])
+shear     x y = Transform (fromList 3 3 [1/k, (-x)/k, 0, (-y)/k, 1/k, 0, 0, 0, 1]) where
+  k = 1 * 1 - x * y 
+-- rotate angle  = Transform (fromList 3 3 [(cos angle), (-sin angle), 0, (sin angle), (cos angle), 0, 0, 0, 1])
+rotate angle  = Transform (fromList 3 3 [(cos angle)/k, (-(-sin angle))/k, 0, (-(sin angle))/k, (cos angle)/k, 0, 0, 0, 1]) where
+  k = (cos angle) * (cos angle) - (-sin angle) * (sin angle)
 
 (<+>) :: Transform -> Transform -> Transform
 (Transform m1) <+> (Transform m2) = Transform (multStd m1 m2)
