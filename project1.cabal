@@ -38,7 +38,10 @@ library
   build-depends:
       JuicyPixels
     , base >=4.7 && <5
+    , blaze-html
     , matrix
+    , scotty
+    , text
   default-language: Haskell2010
 
 executable project1-exe
@@ -53,8 +56,11 @@ executable project1-exe
   build-depends:
       JuicyPixels
     , base >=4.7 && <5
+    , blaze-html
     , matrix
     , project1
+    , scotty
+    , text
   default-language: Haskell2010
 
 test-suite project1-test
@@ -70,6 +76,9 @@ test-suite project1-test
   build-depends:
       JuicyPixels
     , base >=4.7 && <5
+    , blaze-html
     , matrix
     , project1
+    , scotty
+    , text
   default-language: Haskell2010

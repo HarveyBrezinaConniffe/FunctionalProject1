@@ -1,9 +1,12 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Main (main) where
 
 import Lib
 import Shapes
 import Codec.Picture
 import Render (render,defaultWindow)
+import Web.Scotty
 
 --exampleDrawing =  [ ((scale 0.5 0.25)<+>(translate 0.25 0.5)<+>(shear 0.25 0.1)<+>(rotate 0.5), circle) ]
 --circleDrawing = [(ident, circle)]
@@ -25,4 +28,8 @@ exampleDrawing = [((translate 0.5 0), rectangle 0.5 0.5, gradient),
 
 circleMask = [((scale 1 0.25), circle)]
 
-main = render "output.png" defaultWindow exampleDrawing (MaskDrawing circleMask)
+--main = render "output.png" defaultWindow exampleDrawing (MaskDrawing circleMask)
+
+main = scotty 8080 $ do
+  get "/" $ do
+    html "Hello World!"
