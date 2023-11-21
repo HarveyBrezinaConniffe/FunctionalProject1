@@ -2,7 +2,6 @@ module Render(Window,defaultWindow,samples,render) where
 import Codec.Picture
 import Shapes
 
-
 --  A window specifies what part of the world to render and at which
 --  resolution.
 --  Values are top left & bottom right corner to be rendered,
@@ -46,7 +45,7 @@ render path win sh = writePng path $ generateImage pixRenderer w h
     where
       Window _ _ (w,h) = win
 
-      pixRenderer x y = PixelRGB8 c c c where c = colorForImage $ mapPoint win (x,y)
+      pixRenderer x y = getColor (mapPoint win (x,y)) sh
 
       mapPoint :: Window -> (Int,Int) -> Point
       mapPoint w p = coord_to_point w p
@@ -58,5 +57,3 @@ render path win sh = writePng path $ generateImage pixRenderer w h
 
       locations :: [ ((Int,Int), Point) ]
       locations = concat $ zipWith zip (coords win) (pixels win)
-      colorForImage p | p `inside` sh = 255
-                      | otherwise     = 0

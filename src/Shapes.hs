@@ -1,11 +1,12 @@
 module Shapes(
-  Shape, Point, Vector, Transform, Drawing,
+  Shape, Point, Vector(..), Transform, Drawing,
   point, getX, getY,
   empty, circle, square, rectangle, ellipse, polygon, polygonEdge,
   ident, translate, rotate, scale, shear, (<+>),
-  inside)  where
+  getColor)  where
 
 import Data.Matrix
+import Codec.Picture
  
 -- Utilities
 
@@ -78,23 +79,29 @@ transform (Transform mat) p = homogenousVecToPoint (multStd mat (pointToHomogeno
 
 -- Drawings
 
-type Drawing = [(Transform,Shape)]
+type Drawing = [(Transform, Shape, (Point -> PixelRGB8))]
 
 -- interpretation function for drawings
 
-inside :: Point -> Drawing -> Bool
-inside p d = any (inside1 p) d
+getColor :: Point -> [(Transform, Shape, (Point -> PixelRGB8))] -> PixelRGB8
+getColor _ [] = PixelRGB8 0 0 0
+getColor p ((t, shape, colorFunc):xs) = case insideShape (transform t p) shape of
+  True -> colorFunc (transform t p)
+  False -> getColor p xs
 
-inside1 :: Point -> (Transform, Shape) -> Bool
-inside1 p (t,s) = insides (transform t p) s
+-- inside :: Point -> Drawing -> Bool
+-- inside p d = any (inside1 p) d
 
-insides :: Point -> Shape -> Bool
-p `insides` Empty = False
-p `insides` Circle = distance p <= 1
-p `insides` Square = maxnorm  p <= 1
-(Vector x y) `insides` (Rectangle width height) = (x >= 0 && x <= width) && (y >= 0 && y <= height)
-(Vector x y) `insides` (Ellipse width height) = (((x**2)/((width/2)**2))+((y**2)/((height/2)**2))) <= 1
-p `insides` (Polygon edges) = pointInPolygon p edges
+-- inside1 :: Point -> (Transform, Shape, (Point -> Int -> Int -> Int)) -> Bool
+-- inside1 p (t, s, _) = insides (transform t p) s
+
+insideShape :: Point -> Shape -> Bool
+p `insideShape` Empty = False
+p `insideShape` Circle = distance p <= 1
+p `insideShape` Square = maxnorm  p <= 1
+(Vector x y) `insideShape` (Rectangle width height) = (x >= 0 && x <= width) && (y >= 0 && y <= height)
+(Vector x y) `insideShape` (Ellipse width height) = (((x**2)/((width/2)**2))+((y**2)/((height/2)**2))) <= 1
+p `insideShape` (Polygon edges) = pointInPolygon p edges
 
 pointInPolygon :: Point -> [PolygonEdge] -> Bool
 pointInPolygon (Vector x y) edges = odd (numIntersects (Vector x y) edges)
