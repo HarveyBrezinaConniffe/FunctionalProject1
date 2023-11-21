@@ -3,7 +3,7 @@ module Shapes(
   point, getX, getY,
   empty, circle, square, rectangle, ellipse, polygon, polygonEdge,
   ident, translate, rotate, scale, shear, (<+>),
-  getColor)  where
+  getColor, getMask, Mask(..))  where
 
 import Data.Matrix
 import Codec.Picture
@@ -80,6 +80,8 @@ transform (Transform mat) p = homogenousVecToPoint (multStd mat (pointToHomogeno
 -- Drawings
 
 type Drawing = [(Transform, Shape, (Point -> PixelRGB8))]
+data Mask = EmptyMask
+            | MaskDrawing [(Transform, Shape)]
 
 -- interpretation function for drawings
 
@@ -88,6 +90,13 @@ getColor _ [] = PixelRGB8 0 0 0
 getColor p ((t, shape, colorFunc):xs) = case insideShape (transform t p) shape of
   True -> colorFunc (transform t p)
   False -> getColor p xs
+
+getMask :: Point -> Mask -> Bool
+getMask _ EmptyMask = True
+getMask _ (MaskDrawing []) = False
+getMask p (MaskDrawing ((t, shape):xs)) = case insideShape (transform t p) shape of
+  True -> True
+  False -> getMask p (MaskDrawing xs)
 
 -- inside :: Point -> Drawing -> Bool
 -- inside p d = any (inside1 p) d

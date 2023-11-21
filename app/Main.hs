@@ -20,6 +20,9 @@ gradient :: Point -> PixelRGB8
 gradient (Vector x y) = PixelRGB8 redVal 255 100 where
   redVal = round ((x/0.5)*255.0)
 
-rectDrawing = [((translate 0.5 0), rectangle 0.5 0.5, gradient)]
+exampleDrawing = [((translate 0.5 0), rectangle 0.5 0.5, gradient),
+               ((scale 0.25 0.5), circle, gradient)]
 
-main = render "output.png" defaultWindow rectDrawing
+circleMask = [((scale 1 0.25), circle)]
+
+main = render "output.png" defaultWindow exampleDrawing (MaskDrawing circleMask)

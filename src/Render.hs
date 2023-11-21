@@ -40,12 +40,14 @@ coord_to_point (Window p0 p1 (w, h)) (x, y) = point (scale_in_range (getX p0) (g
 -- NB: the lookup1 function is a VERY inefficient way to convert screen coordinates to drawing
 --     coordinates! It should be possible to do this in O(1) time, not O(N) time!!
 --     If you enlarge the viewport in defaultWindow from 50x50 to 500x500 then you will see the problem.
-render :: String -> Window -> Drawing -> IO ()
-render path win sh = writePng path $ generateImage pixRenderer w h
+render :: String -> Window -> Drawing -> Mask -> IO ()
+render path win sh msk = writePng path $ generateImage pixRenderer w h
     where
       Window _ _ (w,h) = win
 
-      pixRenderer x y = getColor (mapPoint win (x,y)) sh
+      pixRenderer x y = case getMask (mapPoint win (x,y)) msk of
+        True -> getColor (mapPoint win (x,y)) sh
+        False -> PixelRGB8 0 0 0
 
       mapPoint :: Window -> (Int,Int) -> Point
       mapPoint w p = coord_to_point w p
