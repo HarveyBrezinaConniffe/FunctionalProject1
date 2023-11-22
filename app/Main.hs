@@ -10,6 +10,8 @@ import Text.Blaze.Html.Renderer.Text (renderHtml)
 import qualified Text.Blaze.Html5 as H
 import qualified Text.Blaze.Html5.Attributes as A
 import Web.Scotty
+import Data.IORef
+import System.Eval
 
 --exampleDrawing =  [ ((scale 0.5 0.25)<+>(translate 0.25 0.5)<+>(shear 0.25 0.1)<+>(rotate 0.5), circle) ]
 --circleDrawing = [(ident, circle)]
@@ -34,8 +36,13 @@ circleMask = [((scale 1 0.25), circle)]
 --main = render "output.png" defaultWindow exampleDrawing (MaskDrawing circleMask)
 
 main = scotty 8080 $ do
+  imgProg <- newIORef "[((translate 0.5 0), rectangle 0.5 0.5, gradient), ((scale 0.25 0.5), circle, gradient)]"
+  maskProg <- newIORef "[((scale 1 0.25), circle)]"
   get "/image" $ do
-    raw (render defaultWindow exampleDrawing (MaskDrawing circleMask))
+    imgstr <- readIORef imgProg
+    maskstr <- readIORef maskProg
+    imgCode <- eval imgstr
+    raw (render defaultWindow imgCode (MaskDrawing circleMask))
   get "/" $
     html $ renderHtml $
       H.html $
